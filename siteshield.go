@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 
@@ -9,17 +10,22 @@ import (
 	"github.com/akamai/AkamaiOPEN-edgegrid-golang/edgegrid"
 )
 
+var (
+	id        int
+	ips       bool
+	reqString string
+)
+
 type MapsApiResp struct {
 	SiteShieldMaps []Map `json:"siteShieldMaps"`
 }
 
 type Map struct {
-	AcknowledgeRequiredBy int64    `json:"acknowledgeRequiredBy"`
-	Contacts              []string `json:"contacts"`
-	CurrentCidrs          []string `json:"currentCidrs"`
-	ID                    int      `json:"id"`
-	Type                  string   `json:"type"`
-	RuleName              string   `json:"ruleName"`
+	Contacts     []string `json:"contacts"`
+	CurrentCidrs []string `json:"currentCidrs"`
+	ID           int      `json:"id"`
+	Type         string   `json:"type"`
+	RuleName     string   `json:"ruleName"`
 }
 
 func MapsApiRespParse(in string) (maps MapsApiResp, err error) {
@@ -29,31 +35,49 @@ func MapsApiRespParse(in string) (maps MapsApiResp, err error) {
 	return
 }
 
+func MapApiRespParse(in string) (maps Map, err error) {
+	if err = json.Unmarshal([]byte(in), &maps); err != nil {
+		return
+	}
+	return
+}
+
+func init() {
+	flag.BoolVar(&ips, "only-cidrs", false, "Show only current CIDRs")
+	flag.IntVar(&id, "id", 0, "Siteshield map ID")
+	flag.Parse()
+}
+
 func main() {
+	reqString := "/siteshield/v1/maps"
 	config, _ := edgegrid.Init("~/.edgerc", "default")
 
-	req, _ := client.NewRequest(config, "GET", "/siteshield/v1/maps", nil)
+	if id != 0 {
+		reqString = fmt.Sprintf("/siteshield/v1/maps/%d", id)
+	}
+
+	req, _ := client.NewRequest(config, "GET", reqString, nil)
 	resp, _ := client.Do(config, req)
 
 	defer resp.Body.Close()
 	byt, _ := ioutil.ReadAll(resp.Body)
 
-	result, err := MapsApiRespParse(string(byt))
-	if err != nil {
-		fmt.Println("error:", err)
+	if id != 0 {
+		result, err := MapApiRespParse(string(byt))
+		if err != nil {
+			fmt.Println("error:", err)
+		}
+		if ips {
+			fmt.Println(result.CurrentCidrs)
+		} else {
+			fmt.Println(result)
+		}
+	} else {
+		result, err := MapsApiRespParse(string(byt))
+		if err != nil {
+			fmt.Println("error:", err)
+		}
+		fmt.Println(result.SiteShieldMaps)
 	}
-
-	id := result.SiteShieldMaps[0].CurrentCidrs
-	fmt.Println(id)
-
-	// m := fmt.Sprintf("/siteshield/v1/maps/%d", t)
-	// fmt.Println(m)
-	// req, _ = client.NewRequest(config, "GET", m, nil)
-	// resp, _ = client.Do(config, req)
-
-	// defer resp.Body.Close()
-	// byt, _ = ioutil.ReadAll(resp.Body)
-
-	// fmt.Println(string(byt))
 
 }
