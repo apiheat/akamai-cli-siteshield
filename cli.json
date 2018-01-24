@@ -1,0 +1,13 @@
+{
+  "requirements": {
+    "go": "1.9.2"
+  },
+  "commands": [
+    {
+      "name": "siteshield",
+      "version": "0.0.1",
+      "description": "Get SiteShield IPs",
+      "bin": "https://github.com/akamai/cli-purge/releases/download/{{.Version}}/akamai-{{.Name}}-{{.OS}}{{.Arch}}{{.BinSuffix}}"
+    }
+  ]
+}
