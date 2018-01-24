@@ -5,15 +5,16 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/akamai/AkamaiOPEN-edgegrid-golang/client-v1"
 	"github.com/akamai/AkamaiOPEN-edgegrid-golang/edgegrid"
 )
 
 var (
-	id        int
-	ips       bool
-	reqString string
+	id                int
+	ips               bool
+	reqString, output string
 )
 
 type MapsApiResp struct {
@@ -44,6 +45,7 @@ func MapApiRespParse(in string) (maps Map, err error) {
 
 func init() {
 	flag.BoolVar(&ips, "only-cidrs", false, "Show only current CIDRs")
+	flag.StringVar(&output, "output", "", "Output format")
 	flag.IntVar(&id, "id", 0, "Siteshield map ID")
 	flag.Parse()
 }
@@ -68,7 +70,14 @@ func main() {
 			fmt.Println("error:", err)
 		}
 		if ips {
-			fmt.Println(result.CurrentCidrs)
+			switch output {
+			case "apache":
+				join := strings.Join(result.CurrentCidrs[:], " ")
+				output := fmt.Sprintf("# Akamai SiteShield\nRequire ip %s", join)
+				fmt.Println(output)
+			default:
+				fmt.Println(result.CurrentCidrs)
+			}
 		} else {
 			fmt.Println(result)
 		}
