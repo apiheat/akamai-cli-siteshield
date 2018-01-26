@@ -105,7 +105,7 @@ func fetchData(configFile, configSection, urlPath string) (result string) {
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "akamai-netstorage"
+	app.Name = "siteshield"
 	app.Usage = "Akamai CLI"
 	app.Version = VERSION
 	app.Copyright = ""
