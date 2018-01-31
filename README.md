@@ -2,10 +2,15 @@
 *NOTE:* This tool is intended to be installed via the Akamai CLI package manager, which can be retrieved from the releases page of the [Akamai CLI](https://github.com/akamai/cli) tool.
 
 ### Local Install, if you choose not to use the akamai package manager
-* Go 1.9.2
-* go get https://github.com/partamonov/akamai-cli-siteshield
-* cd $GOPATH/src/github.com/partamonov/akamai-cli-siteshield
-* go build
+If you want to compile it from source, you will need Go 1.9 or later, and the [Glide](https://glide.sh) package manager installed:
+1. Fetch the package:
+   `go get https://github.com/partamonov/akamai-cli-siteshield`
+1. Change to the package directory:
+   `cd $GOPATH/src/github.com/partamonov/akamai-cli-siteshield`
+1. Install dependencies using Glide:
+   `glide install`
+1. Compile the binary:
+   `go build -ldflags="-s -w" -o akamai-siteshield`
 
 ### Credentials
 In order to use this configuration, you need to:
