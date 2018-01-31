@@ -1,18 +1,11 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
-	"os/user"
-	"path"
-	"strconv"
-	"strings"
+	"sort"
 
-	"github.com/akamai/AkamaiOPEN-edgegrid-golang/client-v1"
 	"github.com/akamai/AkamaiOPEN-edgegrid-golang/edgegrid"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/urfave/cli"
 )
 
@@ -21,12 +14,14 @@ var (
 	ips                       bool
 	reqString, output         string
 	configSection, configFile string
+	edgeConfig                edgegrid.Config
 )
 
 // Constants
 const (
-	VERSION = "0.0.1"
+	VERSION = "0.0.2"
 	URL     = "/siteshield/v1/maps"
+	padding = 3
 )
 
 // MapsAPIResp response struct
@@ -53,75 +48,45 @@ type Map struct {
 	Type                  string   `json:"type"`
 }
 
-// MapsAPIRespParse unmarshal json
-func MapsAPIRespParse(in string) (maps MapsAPIResp, err error) {
-	if err = json.Unmarshal([]byte(in), &maps); err != nil {
-		return
-	}
-	return
-}
-
-// MapAPIRespParse unmarshal json
-func MapAPIRespParse(in string) (maps Map, err error) {
-	if err = json.Unmarshal([]byte(in), &maps); err != nil {
-		return
-	}
-	return
-}
-
-func userHome() string {
-	usr, err := user.Current()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return usr.HomeDir
-}
-
-func fetchData(configFile, configSection, urlPath string) (result string) {
-	if configFile == ".edgerc" {
-		configFile = path.Join(userHome(), ".edgerc")
-	}
-
-	config, err := edgegrid.Init(configFile, configSection)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	req, err := client.NewRequest(config, "GET", urlPath, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	resp, err := client.Do(config, req)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-	byt, _ := ioutil.ReadAll(resp.Body)
-
-	return string(byt)
-}
-
 func main() {
+	_, inCLI := os.LookupEnv("AKAMAI_CLI")
+
+	appName := "akamai-siteshield"
+	if inCLI {
+		appName = "akamai siteshield"
+	}
+
 	app := cli.NewApp()
-	app.Name = "siteshield"
-	app.Usage = "Akamai CLI"
+	app.Name = appName
+	app.HelpName = appName
 	app.Version = VERSION
 	app.Copyright = ""
+	app.Authors = []cli.Author{
+		{
+			Name: "Petr Artamonov",
+		},
+		{
+			Name: "Rafal Pieniazek",
+		},
+	}
+
+	dir, _ := homedir.Dir()
+	dir += string(os.PathSeparator) + ".edgerc"
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "section, s",
 			Value:       "default",
-			Usage:       "`NAME` of section to use from .edgerc",
+			Usage:       "`NAME` of section to use from credentials file",
 			Destination: &configSection,
+			EnvVar:      "AKAMAI_EDGERC_SECTION",
 		},
 		cli.StringFlag{
 			Name:        "config, c",
-			Value:       ".edgerc",
-			Usage:       "Load configuration from `FILE`",
+			Value:       dir,
+			Usage:       "Location of the credentials `FILE`",
 			Destination: &configFile,
+			EnvVar:      "AKAMAI_EDGERC",
 		},
 	}
 
@@ -129,35 +94,14 @@ func main() {
 		{
 			Name:    "list-maps",
 			Aliases: []string{"ls"},
-			Usage:   "List SiteShield Maps `ID`",
+			Usage:   "List SiteShield Maps",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "only-ids",
-					Usage: "Show only IDs",
+					Usage: "Show only SiteShield Maps IDs",
 				},
 			},
-			Action: func(c *cli.Context) error {
-				data := fetchData(configFile, configSection, URL)
-
-				result, err := MapsAPIRespParse(data)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				if c.Bool("only-ids") {
-					for _, f := range result.SiteShieldMaps {
-						fmt.Println("SiteShield Map:")
-						fmt.Printf("  ID: %v\n", f.ID)
-						fmt.Printf("  Name: %s\n", f.RuleName)
-						fmt.Printf("  Alias: %s\n", f.MapAlias)
-						fmt.Printf("  Env: %s\n", f.Type)
-					}
-				} else {
-					fmt.Println(result.SiteShieldMaps)
-				}
-
-				return nil
-			},
+			Action: cmdlistMaps,
 		},
 		{
 			Name:    "list-map",
@@ -167,7 +111,7 @@ func main() {
 				cli.StringFlag{
 					Name:        "output",
 					Value:       "json",
-					Usage:       "Output format. supported json and apache]",
+					Usage:       "Output format. Supported ['json' and 'apache']",
 					Destination: &output,
 				},
 				cli.BoolFlag{
@@ -175,42 +119,16 @@ func main() {
 					Usage: "Show only CIDR IP addresses",
 				},
 			},
-			Action: func(c *cli.Context) error {
-				var id string
-				if c.NArg() > 0 {
-					id = c.Args().Get(0)
-					if _, err := strconv.Atoi(id); err != nil {
-						errStr := fmt.Sprintf("SiteShield Map ID should be number, you provided: %q\n", id)
-						log.Fatal(errStr)
-					}
-				} else {
-					log.Fatal("Please provide ID for map to fetch")
-				}
-
-				urlStr := fmt.Sprintf("%s/%s", URL, id)
-				data := fetchData(configFile, configSection, urlStr)
-
-				result, err := MapAPIRespParse(data)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				if c.Bool("only-cidrs") {
-					switch output {
-					case "apache":
-						join := strings.Join(result.CurrentCidrs[:], " ")
-						outputStr := fmt.Sprintf("# Akamai SiteShield\nRequire ip %s", join)
-						fmt.Println(outputStr)
-					case "json":
-						fmt.Println(result.CurrentCidrs)
-					}
-				} else {
-					fmt.Println(result)
-				}
-
-				return nil
-			},
+			Action: cmdlistMap,
 		},
+	}
+
+	sort.Sort(cli.FlagsByName(app.Flags))
+	sort.Sort(cli.CommandsByName(app.Commands))
+
+	app.Before = func(c *cli.Context) error {
+		edgeConfig = config(configFile, configSection)
+		return nil
 	}
 
 	app.Run(os.Args)

@@ -5,9 +5,9 @@
   "commands": [
     {
       "name": "siteshield",
-      "version": "0.0.1",
+      "version": "0.0.2",
       "description": "Get SiteShield IPs",
-      "bin": "https://github.com/akamai/cli-purge/releases/download/{{.Version}}/akamai-{{.Name}}-{{.OS}}{{.Arch}}{{.BinSuffix}}"
+      "bin": "https://github.com/partamonov/akamai-cli-siteshield/releases/download/{{.Version}}/akamai-{{.Name}}-{{.OS}}-{{.Arch}}{{.BinSuffix}}"
     }
   ]
 }
