@@ -19,7 +19,7 @@ var (
 
 // Constants
 const (
-	VERSION = "0.0.2"
+	VERSION = "0.0.3"
 	URL     = "/siteshield/v1/maps"
 	padding = 3
 )
@@ -120,6 +120,18 @@ func main() {
 				},
 			},
 			Action: cmdlistMap,
+		},
+		{
+			Name:    "compare-cidrs",
+			Aliases: []string{"cc"},
+			Usage:   "Compare SiteShield Map Current CIDRs with Proposed by `ID`",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "only-diff",
+					Usage: "Show only diff",
+				},
+			},
+			Action: cmdCompareCidr,
 		},
 	}
 

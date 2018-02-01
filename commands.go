@@ -1,9 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"sort"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/urfave/cli"
 )
@@ -16,6 +20,10 @@ func cmdlistMap(c *cli.Context) error {
 	return listMap(c)
 }
 
+func cmdCompareCidr(c *cli.Context) error {
+	return compareCidrs(c)
+}
+
 func listMaps(c *cli.Context) error {
 	data := fetchData(URL)
 
@@ -25,7 +33,8 @@ func listMaps(c *cli.Context) error {
 	if c.Bool("only-ids") {
 		printIDs(result.SiteShieldMaps)
 	} else {
-		fmt.Println(result.SiteShieldMaps)
+		jsonRes, _ := json.MarshalIndent(result.SiteShieldMaps, "", "  ")
+		fmt.Printf("%+v\n", string(jsonRes))
 	}
 
 	return nil
@@ -47,16 +56,83 @@ func listMap(c *cli.Context) error {
 	errorCheck(err)
 
 	if c.Bool("only-cidrs") {
+		sorted := result.CurrentCidrs
+		sort.Strings(sorted)
+
 		switch output {
 		case "apache":
-			join := strings.Join(result.CurrentCidrs[:], " ")
+			join := strings.Join(sorted[:], " ")
 			outputStr := fmt.Sprintf("# Akamai SiteShield\nRequire ip %s", join)
 			fmt.Println(outputStr)
 		case "json":
-			fmt.Println(result.CurrentCidrs)
+			jsonRes, _ := json.MarshalIndent(sorted, "", "  ")
+			fmt.Printf("%+v\n", string(jsonRes))
 		}
 	} else {
-		fmt.Println(result)
+		jsonRes, _ := json.MarshalIndent(result, "", "  ")
+		fmt.Printf("%+v\n", string(jsonRes))
+	}
+
+	return nil
+}
+
+func compareCidrs(c *cli.Context) error {
+	var id string
+	if c.NArg() > 0 {
+		id = c.Args().Get(0)
+		verifyID(id)
+	} else {
+		log.Fatal("Please provide ID for map")
+	}
+
+	urlStr := fmt.Sprintf("%s/%s", URL, id)
+	data := fetchData(urlStr)
+
+	result, err := MapAPIRespParse(data)
+	errorCheck(err)
+
+	current := result.CurrentCidrs
+	sort.Strings(current)
+
+	proposed := result.ProposedCidrs
+	sort.Strings(proposed)
+
+	if c.Bool("only-diff") {
+		if len(difference(current, proposed)) > 0 {
+			fmt.Println("Removed:")
+			for i := range difference(current, proposed) {
+				fmt.Printf("\t%+v\n", difference(current, proposed)[i])
+			}
+		}
+		if len(difference(proposed, current)) > 0 {
+			fmt.Println("Added:")
+			for i := range difference(proposed, current) {
+				fmt.Printf("\t%+v\n", difference(proposed, current)[i])
+			}
+		}
+	} else {
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', 0)
+		fmt.Fprintln(w, fmt.Sprint("Current\tProposed"))
+
+		iter := proposed
+		if len(current) >= len(proposed) {
+			iter = current
+		}
+
+		for i := range iter {
+			cIP := ""
+			if i < len(current) {
+				cIP = current[i]
+			}
+
+			pIP := ""
+			if i < len(proposed) {
+				pIP = proposed[i]
+			}
+
+			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", cIP, pIP))
+		}
+		w.Flush()
 	}
 
 	return nil

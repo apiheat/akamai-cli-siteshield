@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"text/tabwriter"
+	"time"
 
 	client "github.com/akamai/AkamaiOPEN-edgegrid-golang/client-v1"
 )
@@ -38,9 +39,13 @@ func verifyID(id string) {
 func printIDs(data []Map) {
 	fmt.Println("SiteShield Maps:")
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', 0)
-	fmt.Fprintln(w, fmt.Sprint("ID\tName\tAlias\tEnv"))
+	fmt.Fprintln(w, fmt.Sprint("ID\tName\tAlias\tEnv\tAcknowledged\tAcknowledge Required By"))
 	for _, f := range data {
-		fmt.Fprintln(w, fmt.Sprintf("%v\t%s\t%s\t%s", f.ID, f.RuleName, f.MapAlias, f.Type))
+		fmt.Fprintln(w, fmt.Sprintf("%v\t%s\t%s\t%s\t%v\t%v",
+			f.ID, f.RuleName, f.MapAlias, f.Type,
+			time.Unix(0, f.AcknowledgedOn*int64(time.Millisecond)),
+			time.Unix(0, f.AcknowledgeRequiredBy*int64(time.Millisecond)),
+		))
 	}
 	w.Flush()
 }
@@ -62,4 +67,23 @@ func fetchData(urlPath string) (result string) {
 	byt, _ := ioutil.ReadAll(resp.Body)
 
 	return string(byt)
+}
+
+func difference(slice1 []string, slice2 []string) []string {
+	var diff []string
+	for _, s1 := range slice1 {
+		found := false
+		for _, s2 := range slice2 {
+			if s1 == s2 {
+				found = true
+				break
+			}
+		}
+		// String not found. We add it to return slice
+		if !found {
+			diff = append(diff, s1)
+		}
+	}
+
+	return diff
 }
