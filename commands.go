@@ -21,11 +21,14 @@ func cmdlistMap(c *cli.Context) error {
 }
 
 func cmdCompareCidr(c *cli.Context) error {
-	return compareCidrs(c)
+	return compareCidr(c)
+}
+func cmdAck(c *cli.Context) error {
+	return ackMap(c)
 }
 
 func listMaps(c *cli.Context) error {
-	data := fetchData(URL)
+	data := fetchData(URL, "GET")
 
 	result, err := MapsAPIRespParse(data)
 	errorCheck(err)
@@ -50,7 +53,7 @@ func listMap(c *cli.Context) error {
 	}
 
 	urlStr := fmt.Sprintf("%s/%s", URL, id)
-	data := fetchData(urlStr)
+	data := fetchData(urlStr, "GET")
 
 	result, err := MapAPIRespParse(data)
 	errorCheck(err)
@@ -76,7 +79,29 @@ func listMap(c *cli.Context) error {
 	return nil
 }
 
-func compareCidrs(c *cli.Context) error {
+func ackMap(c *cli.Context) error {
+	var id string
+	if c.NArg() > 0 {
+		id = c.Args().Get(0)
+		verifyID(id)
+	} else {
+		log.Fatal("Please provide ID for map")
+	}
+
+	urlStr := fmt.Sprintf("%s/%s/acknowledge", URL, id)
+	data := fetchData(urlStr, "POST")
+
+	result, err := MapAPIRespParse(data)
+	errorCheck(err)
+
+	var arr []Map
+	arr = append(arr, result)
+	printIDs(arr)
+
+	return nil
+}
+
+func compareCidr(c *cli.Context) error {
 	var id string
 	if c.NArg() > 0 {
 		id = c.Args().Get(0)
@@ -86,7 +111,7 @@ func compareCidrs(c *cli.Context) error {
 	}
 
 	urlStr := fmt.Sprintf("%s/%s", URL, id)
-	data := fetchData(urlStr)
+	data := fetchData(urlStr, "GET")
 
 	result, err := MapAPIRespParse(data)
 	errorCheck(err)
@@ -98,6 +123,10 @@ func compareCidrs(c *cli.Context) error {
 	sort.Strings(proposed)
 
 	if c.Bool("only-diff") {
+		if len(proposed) == 0 {
+			log.Println("There are no proposed CIDRs, your current CIDR list is up to date")
+			return nil
+		}
 		if len(difference(current, proposed)) > 0 {
 			fmt.Println("Removed:")
 			for i := range difference(current, proposed) {

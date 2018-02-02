@@ -41,11 +41,19 @@ func printIDs(data []Map) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', 0)
 	fmt.Fprintln(w, fmt.Sprint("ID\tName\tAlias\tEnv\tAcknowledged\tAcknowledge Required By"))
 	for _, f := range data {
-		fmt.Fprintln(w, fmt.Sprintf("%v\t%s\t%s\t%s\t%v\t%v",
-			f.ID, f.RuleName, f.MapAlias, f.Type,
-			time.Unix(0, f.AcknowledgedOn*int64(time.Millisecond)),
-			time.Unix(0, f.AcknowledgeRequiredBy*int64(time.Millisecond)),
-		))
+		if f.AcknowledgeRequiredBy == 0 {
+			fmt.Fprintln(w, fmt.Sprintf("%v\t%s\t%s\t%s\t%v\t%s",
+				f.ID, f.RuleName, f.MapAlias, f.Type,
+				time.Unix(0, f.AcknowledgedOn*int64(time.Millisecond)),
+				"Up to date",
+			))
+		} else {
+			fmt.Fprintln(w, fmt.Sprintf("%v\t%s\t%s\t%s\t%v\t%v",
+				f.ID, f.RuleName, f.MapAlias, f.Type,
+				time.Unix(0, f.AcknowledgedOn*int64(time.Millisecond)),
+				time.Unix(0, f.AcknowledgeRequiredBy*int64(time.Millisecond)),
+			))
+		}
 	}
 	w.Flush()
 }
@@ -56,8 +64,8 @@ func errorCheck(e error) {
 	}
 }
 
-func fetchData(urlPath string) (result string) {
-	req, err := client.NewRequest(edgeConfig, "GET", urlPath, nil)
+func fetchData(urlPath, method string) (result string) {
+	req, err := client.NewRequest(edgeConfig, method, urlPath, nil)
 	errorCheck(err)
 
 	resp, err := client.Do(edgeConfig, req)

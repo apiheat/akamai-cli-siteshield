@@ -133,6 +133,12 @@ func main() {
 			},
 			Action: cmdCompareCidr,
 		},
+		{
+			Name:    "acknowledge",
+			Aliases: []string{"ack"},
+			Usage:   "Acknowledge SiteShield Map by `ID`",
+			Action:  cmdAck,
+		},
 	}
 
 	sort.Sort(cli.FlagsByName(app.Flags))
