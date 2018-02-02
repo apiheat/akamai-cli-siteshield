@@ -59,6 +59,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = appName
 	app.HelpName = appName
+	app.Usage = "A CLI to interact with Akamai SiteShield"
 	app.Version = VERSION
 	app.Copyright = ""
 	app.Authors = []cli.Author{
