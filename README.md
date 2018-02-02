@@ -29,35 +29,7 @@ client_token = XXXXXXXXXXXX
 ## Overview
 The Akamai SiteShield Kit is a set of go libraries that wraps Akamai's {OPEN} APIs to help simplify common siteshield tasks.
 
-## Usage
-```shell
-# akamai siteshield
-NAME:
-   akamai siteshield - A new cli application
-
-USAGE:
-   akamai siteshield [global options] command [command options] [arguments...]
-
-VERSION:
-   0.0.2
-
-AUTHORS:
-   Petr Artamonov
-   Rafal Pieniazek
-
-COMMANDS:
-     list-map, lm   List SiteShield Map by `ID`
-     list-maps, ls  List SiteShield Maps `ID`
-     help, h        Shows a list of commands or help for one command
-
-GLOBAL OPTIONS:
-   --config FILE, -c FILE   Location of the credentials FILE (default: "/Users/partamonov/.edgerc") [$AKAMAI_EDGERC]
-   --section NAME, -s NAME  NAME of section to use from credentials file (default: "default") [$AKAMAI_EDGERC_SECTION]
-   --help, -h               show help
-   --version, -v            print the version
-```
-
-### Main Command Usage
+## Main Command Usage
 ```shell
 NAME:
    akamai-siteshield - A CLI to interact with Akamai SiteShield
