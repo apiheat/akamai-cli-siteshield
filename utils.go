@@ -11,6 +11,7 @@ import (
 	"time"
 
 	client "github.com/akamai/AkamaiOPEN-edgegrid-golang/client-v1"
+	"github.com/urfave/cli"
 )
 
 // MapsAPIRespParse unmarshal json
@@ -29,11 +30,37 @@ func MapAPIRespParse(in string) (maps Map, err error) {
 	return
 }
 
+func setID(c *cli.Context) string {
+	var id string
+	if c.NArg() == 0 {
+		log.Fatal("Please provide ID for map")
+	}
+
+	id = c.Args().Get(0)
+	verifyID(id)
+	return id
+}
+
 func verifyID(id string) {
 	if _, err := strconv.Atoi(id); err != nil {
 		errStr := fmt.Sprintf("SiteShield Map ID should be number, you provided: %q\n", id)
 		log.Fatal(errStr)
 	}
+}
+
+func isOutputFormatSupported(output string) bool {
+	list := []string{"raw", "apache"}
+	for _, b := range list {
+		if b == output {
+			return true
+		}
+	}
+	return false
+}
+
+func printJSON(str interface{}) {
+	jsonRes, _ := json.MarshalIndent(str, "", "  ")
+	fmt.Printf("%+v\n", string(jsonRes))
 }
 
 func printIDs(data []Map) {

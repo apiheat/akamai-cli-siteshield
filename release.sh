@@ -1,0 +1,58 @@
+#!/bin/bash
+
+set -e
+
+usage()
+{
+  echo "usage: release.sh [[-v version ] | [-h]]"
+}
+
+
+version=
+while getopts v:h: option
+do
+  case "${option}"
+  in
+  v) version=${OPTARG};;
+  h) usage;;
+  esac
+done
+# while [ "$1" != "" ]; do
+#     case $1 in
+#         -v | --version )        version=$1
+#                                 ;;
+#         -h | --help )           usage
+#                                 exit
+#                                 ;;
+#         * )                     usage
+#                                 exit 1
+#     esac
+#     shift
+# done
+
+if [ "$version" == "" ]; then
+  echo "Please specify version/tag to release in format X.X.X"
+  exit 1
+else
+  # Set version in cli.json
+  jq ".commands[0].version = \"$version\"" cli.json > tmp_cli.json
+  mv tmp_cli.json cli.json
+
+  # Commit cli.json changes
+  echo "git add cli.json"
+  git add cli.json
+  echo "git commit -m 'Updated version in cli.json'"
+  git commit -m 'Updated version in cli.json'
+  echo "git push origin master"
+  git push origin master
+
+  # Add tag
+  echo "git tag -a v${version} -m \"Release v$version\""
+  git tag -a v${version} -m "Release v$version"
+  # Push
+  echo "git push origin v${version}"
+  git push origin v${version}
+  # Create release
+  echo "goreleaser --rm-dist"
+  goreleaser --rm-dist
+fi

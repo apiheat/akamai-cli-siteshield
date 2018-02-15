@@ -1,5 +1,5 @@
 hash: eeac4ff4441944b32d691bb1e2d644f9b3884942f1445221d61f230b5f726b87
-updated: 2018-01-31T16:06:36.975353+01:00
+updated: 2018-02-14T16:10:42.005984+01:00
 imports:
 - name: github.com/akamai/AkamaiOPEN-edgegrid-golang
   version: 80e2f722f869fc79ff6c745168781e0771e13732
@@ -7,8 +7,16 @@ imports:
   - client-v1
   - edgegrid
   - jsonhooks-v1
+- name: github.com/fatih/color
+  version: 570b54cabe6b8eb0bc2dfce68d964677d63b5260
 - name: github.com/go-ini/ini
   version: 32e4c1e6bc4e7d0d8451aa6b75200d19e37a536a
+- name: github.com/mattn/go-colorable
+  version: 5411d3eea5978e6cdc258b30de592b60df6aba96
+  repo: https://github.com/mattn/go-colorable
+- name: github.com/mattn/go-isatty
+  version: 57fdcb988a5c543893cc61bce354a6e24ab70022
+  repo: https://github.com/mattn/go-isatty
 - name: github.com/mitchellh/go-homedir
   version: b8bc1bf767474819792c23f32d8286a45736f1c6
 - name: github.com/sirupsen/logrus

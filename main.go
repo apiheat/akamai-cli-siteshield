@@ -5,21 +5,21 @@ import (
 	"sort"
 
 	"github.com/akamai/AkamaiOPEN-edgegrid-golang/edgegrid"
+	"github.com/fatih/color"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/urfave/cli"
 )
 
 var (
-	id                        int
-	ips                       bool
-	reqString, output         string
-	configSection, configFile string
-	edgeConfig                edgegrid.Config
+	id                                  int
+	ips, colorOn                        bool
+	reqString, output, version, appName string
+	configSection, configFile           string
+	edgeConfig                          edgegrid.Config
 )
 
 // Constants
 const (
-	VERSION = "0.0.3"
 	URL     = "/siteshield/v1/maps"
 	padding = 3
 )
@@ -51,7 +51,7 @@ type Map struct {
 func main() {
 	_, inCLI := os.LookupEnv("AKAMAI_CLI")
 
-	appName := "akamai-siteshield"
+	appName = "akamai-siteshield"
 	if inCLI {
 		appName = "akamai siteshield"
 	}
@@ -60,7 +60,7 @@ func main() {
 	app.Name = appName
 	app.HelpName = appName
 	app.Usage = "A CLI to interact with Akamai SiteShield"
-	app.Version = VERSION
+	app.Version = version
 	app.Copyright = ""
 	app.Authors = []cli.Author{
 		{
@@ -89,50 +89,61 @@ func main() {
 			Destination: &configFile,
 			EnvVar:      "AKAMAI_EDGERC",
 		},
+		cli.BoolFlag{
+			Name:        "no-color",
+			Usage:       "Disable color output",
+			Destination: &colorOn,
+		},
 	}
 
 	app.Commands = []cli.Command{
 		{
-			Name:    "list-maps",
+			Name:    "list",
 			Aliases: []string{"ls"},
-			Usage:   "List SiteShield Maps",
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "only-ids",
-					Usage: "Show only SiteShield Maps IDs",
+			Usage:   "List SiteShield objects",
+			Subcommands: []cli.Command{
+				{
+					Name:  "maps",
+					Usage: "List SiteShield Maps",
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:  "raw",
+							Usage: "Show raw data of SiteShield Maps",
+						},
+					},
+					Action: cmdlistMaps,
+				},
+				{
+					Name:  "map",
+					Usage: "List SiteShield Map by `ID`",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:        "output",
+							Value:       "raw",
+							Usage:       "Output format. Supported ['json==raw' and 'apache']",
+							Destination: &output,
+						},
+						cli.BoolFlag{
+							Name:  "only-addresses",
+							Usage: "Show only Map addresses.",
+						},
+					},
+					Action: cmdlistMap,
+					Subcommands: []cli.Command{
+						{
+							Name:  "addresses",
+							Usage: "List SiteShield Map Current and Proposed Addresses",
+							Flags: []cli.Flag{
+								cli.BoolFlag{
+									Name:  "show-changes",
+									Usage: "Show only changes",
+								},
+							},
+							Action: cmdAddresses,
+						},
+					},
 				},
 			},
-			Action: cmdlistMaps,
-		},
-		{
-			Name:    "list-map",
-			Aliases: []string{"lm"},
-			Usage:   "List SiteShield Map by `ID`",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:        "output",
-					Value:       "json",
-					Usage:       "Output format. Supported ['json' and 'apache']",
-					Destination: &output,
-				},
-				cli.BoolFlag{
-					Name:  "only-cidrs",
-					Usage: "Show only CIDR IP addresses",
-				},
-			},
-			Action: cmdlistMap,
-		},
-		{
-			Name:    "compare-cidrs",
-			Aliases: []string{"cc"},
-			Usage:   "Compare SiteShield Map Current CIDRs with Proposed by `ID`",
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "only-diff",
-					Usage: "Show only diff",
-				},
-			},
-			Action: cmdCompareCidr,
 		},
 		{
 			Name:    "acknowledge",
@@ -146,6 +157,10 @@ func main() {
 	sort.Sort(cli.CommandsByName(app.Commands))
 
 	app.Before = func(c *cli.Context) error {
+		if c.Bool("no-color") {
+			color.NoColor = true
+		}
+
 		edgeConfig = config(configFile, configSection)
 		return nil
 	}

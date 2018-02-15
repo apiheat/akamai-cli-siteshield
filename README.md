@@ -10,7 +10,7 @@ If you want to compile it from source, you will need Go 1.9 or later, and the [G
 1. Install dependencies using Glide:
    `glide install`
 1. Compile the binary:
-   `go build -ldflags="-s -w" -o akamai-siteshield`
+   `go build -ldflags="-s -w -X main.version=X.X.X" -o akamai-siteshield`
 
 ### Credentials
 In order to use this configuration, you need to:
@@ -19,7 +19,7 @@ In order to use this configuration, you need to:
 Expects `default` section in .edgerc, can be changed via --section parameter
 
 ```
-[netstorage]
+[default]
 client_secret = XXXXXXXXXXXX
 host = XXXXXXXXXXXX
 access_token = XXXXXXXXXXXX
@@ -38,59 +38,87 @@ USAGE:
    akamai-siteshield [global options] command [command options] [arguments...]
 
 VERSION:
-   0.0.3
+   X.X.X
 
 AUTHORS:
    Petr Artamonov
    Rafal Pieniazek
 
 COMMANDS:
-     acknowledge, ack   Acknowledge SiteShield Map by `ID`
-     compare-cidrs, cc  Compare SiteShield Map Current CIDRs with Proposed by `ID`
-     list-map, lm       List SiteShield Map by `ID`
-     list-maps, ls      List SiteShield Maps
-     help, h            Shows a list of commands or help for one command
+     acknowledge, ack  Acknowledge SiteShield Map by `ID`
+     list, ls          List SiteShield objects
+     help, h           Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --config FILE, -c FILE   Location of the credentials FILE (default: "/Users/partamonov/.edgerc") [$AKAMAI_EDGERC]
+   --no-color               Disable color output
    --section NAME, -s NAME  NAME of section to use from credentials file (default: "default") [$AKAMAI_EDGERC_SECTION]
    --help, -h               show help
    --version, -v            print the version
 ```
 
-### Compare CIDRs in current and proposed list
+### Acknowledge command
 ```shell
 NAME:
-   akamai-siteshield compare-cidrs - Compare SiteShield Map Current CIDRs with Proposed by `ID`
+   akamai-siteshield acknowledge - Acknowledge SiteShield Map by `ID`
 
 USAGE:
-   akamai-siteshield compare-cidrs [command options] [arguments...]
-
-OPTIONS:
-   --only-diff  Show only diff
+   akamai-siteshield acknowledge [arguments...]
 ```
 
-### List Map by ID
+### List commands
 ```shell
 NAME:
-   akamai-siteshield list-map - List SiteShield Map by `ID`
+   akamai-siteshield list - List SiteShield objects
 
 USAGE:
-   akamai-siteshield list-map [command options] [arguments...]
+   akamai-siteshield list command [command options] [arguments...]
+
+COMMANDS:
+     maps  List SiteShield Maps
+     map   List SiteShield Map by `ID`
 
 OPTIONS:
-   --output value  Output format. Supported ['json' and 'apache'] (default: "json")
-   --only-cidrs    Show only CIDR IP addresses
+   --help, -h  show help
 ```
 
 ### List all Maps
 ```shell
 NAME:
-   akamai-siteshield list-maps - List SiteShield Maps
+   akamai-siteshield list maps - List SiteShield Maps
 
 USAGE:
-   akamai-siteshield list-maps [command options] [arguments...]
+   akamai-siteshield list maps [command options] [arguments...]
 
 OPTIONS:
-   --only-ids  Show only SiteShield Maps IDs
+   --raw  Show raw data of SiteShield Maps
+```
+
+### List Map by ID
+```shell
+NAME:
+   akamai-siteshield list map - List SiteShield Map by `ID`
+
+USAGE:
+   akamai-siteshield list map command [command options] [arguments...]
+
+COMMANDS:
+     addresses  List SiteShield Map Current and Proposed Addresses
+
+OPTIONS:
+   --output value    Output format. Supported ['json' and 'apache'] (default: "raw")
+   --only-addresses  Show only Map addresses.
+   --help, -h        show help
+```
+
+### List Map current and proposed IP adresses
+```shell
+NAME:
+   akamai-siteshield list map addresses - List SiteShield Map Current and Proposed Addresses
+
+USAGE:
+   akamai-siteshield list map addresses [command options] [arguments...]
+
+OPTIONS:
+   --show-changes  Show only changes
 ```
