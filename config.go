@@ -8,7 +8,7 @@ import (
 	"github.com/go-ini/ini"
 )
 
-func config(configFile, configSection string) (edgegrid.Config, error) {
+func config(configFile, configSection string) {
 	cfg, err := ini.Load(configFile)
 	if err != nil {
 		color.Set(color.FgRed)
@@ -20,10 +20,17 @@ func config(configFile, configSection string) (edgegrid.Config, error) {
 			color.Set(color.FgRed)
 			fmt.Printf("Section '%s' does not exist in %s. Please run '%s --section Your_Section_Name' ...\n", configSection, configFile, appName)
 			color.Unset()
+		} else {
+			var errEdge error
+			edgeConfig, errEdge = edgegrid.Init(configFile, configSection)
+
+			if errEdge != nil {
+				color.Set(color.FgRed)
+				fmt.Println("Error with section found, please check that all fields present")
+				color.Unset()
+			}
 		}
 	}
 
-	config, errEdge := edgegrid.Init(configFile, configSection)
-
-	return config, errEdge
+	return
 }
