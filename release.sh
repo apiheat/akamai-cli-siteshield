@@ -34,17 +34,22 @@ if [ "$version" == "" ]; then
   echo "Please specify version/tag to release in format X.X.X"
   exit 1
 else
-  # Set version in cli.json
-  jq ".commands[0].version = \"$version\"" cli.json > tmp_cli.json
-  mv tmp_cli.json cli.json
+  cli_version=`cat cli.json | jq ".commands[0].version" | tr -d '"'`
+  echo "Current CLI version: ${cli_version}"
+  echo "Proposed version: ${version}"
+  if [ "$version" != "$cli_version" ]; then
+    # Set version in cli.json
+    jq ".commands[0].version = \"$version\"" cli.json > tmp_cli.json
+    mv tmp_cli.json cli.json
 
-  # Commit cli.json changes
-  echo "git add cli.json"
-  git add cli.json
-  echo "git commit -m 'Updated version in cli.json'"
-  git commit -m 'Updated version in cli.json'
-  echo "git push origin master"
-  git push origin master
+    # Commit cli.json changes
+    echo "git add cli.json"
+    git add cli.json
+    echo "git commit -m 'Updated version in cli.json'"
+    git commit -m 'Updated version in cli.json'
+    echo "git push origin master"
+    git push origin master
+  fi
 
   # Add tag
   echo "git tag -a v${version} -m \"Release v$version\""
