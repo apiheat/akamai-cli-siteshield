@@ -12,7 +12,7 @@ import (
 
 var (
 	id                                  int
-	ips, colorOn                        bool
+	ips, colorOn, showConfigLocation    bool
 	reqString, output, version, appName string
 	configSection, configFile           string
 	edgeConfig                          edgegrid.Config
@@ -94,6 +94,11 @@ func main() {
 			Usage:       "Disable color output",
 			Destination: &colorOn,
 		},
+		cli.BoolFlag{
+			Name:        "show-configuration-file-location",
+			Usage:       "Disable display of location and section for config file",
+			Destination: &showConfigLocation,
+		},
 	}
 
 	app.Commands = []cli.Command{
@@ -151,6 +156,11 @@ func main() {
 			Usage:   "Acknowledge SiteShield Map by `ID`",
 			Action:  cmdAck,
 		},
+		{
+			Name:   "status",
+			Usage:  "Check Status: if Acknowledge for SiteShield Map by `ID` is required. If required process will exit with exit code 2",
+			Action: cmdStatus,
+		},
 	}
 
 	sort.Sort(cli.FlagsByName(app.Flags))
@@ -161,7 +171,7 @@ func main() {
 			color.NoColor = true
 		}
 
-		config(configFile, configSection)
+		config(configFile, configSection, showConfigLocation)
 
 		return nil
 	}

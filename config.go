@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-func config(configFile, configSection string) {
+func config(configFile, configSection string, showConfigLocation bool) {
 	cfg, err := ini.Load(configFile)
 	if err != nil {
 		color.Set(color.FgRed)
@@ -35,9 +35,11 @@ func config(configFile, configSection string) {
 		}
 	}
 
-	color.Set(color.FgBlue)
-	fmt.Printf("# Credentials used: [%s] from %s\n", configSection, configFile)
-	color.Unset()
+	if showConfigLocation {
+		color.Set(color.FgBlue)
+		fmt.Printf("# Credentials used: [%s] from %s\n", configSection, configFile)
+		color.Unset()
+	}
 
 	return
 }
