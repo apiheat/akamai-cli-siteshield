@@ -7,6 +7,7 @@ import (
 	"sort"
 	"text/tabwriter"
 
+	common "github.com/apiheat/akamai-cli-common"
 	"github.com/fatih/color"
 	"github.com/urfave/cli"
 )
@@ -16,13 +17,13 @@ func cmdAddresses(c *cli.Context) error {
 }
 
 func addresses(c *cli.Context) error {
-	id := setID(c)
+	id := common.SetIntID(c, "Please provide Map ID")
 
 	urlStr := fmt.Sprintf("%s/%s", URL, id)
 	data := fetchData(urlStr, "GET")
 
 	result, err := MapAPIRespParse(data)
-	errorCheck(err)
+	common.ErrorCheck(err)
 
 	current := result.CurrentCidrs
 	sort.Strings(current)
@@ -35,19 +36,19 @@ func addresses(c *cli.Context) error {
 			log.Println("There are no proposed CIDRs, your current CIDR list is up to date")
 			return nil
 		}
-		if len(difference(current, proposed)) > 0 {
+		if len(common.StringsSlicesDifference(current, proposed)) > 0 {
 			fmt.Println("Removed:")
-			for i := range difference(current, proposed) {
+			for i := range common.StringsSlicesDifference(current, proposed) {
 				color.Set(color.FgRed)
-				fmt.Printf("\t-%+v\n", difference(current, proposed)[i])
+				fmt.Printf("\t-%+v\n", common.StringsSlicesDifference(current, proposed)[i])
 				color.Unset()
 			}
 		}
-		if len(difference(proposed, current)) > 0 {
+		if len(common.StringsSlicesDifference(proposed, current)) > 0 {
 			fmt.Println("Added:")
-			for i := range difference(proposed, current) {
+			for i := range common.StringsSlicesDifference(proposed, current) {
 				color.Set(color.FgGreen)
-				fmt.Printf("\t+%+v\n", difference(proposed, current)[i])
+				fmt.Printf("\t+%+v\n", common.StringsSlicesDifference(proposed, current)[i])
 				color.Unset()
 			}
 		}

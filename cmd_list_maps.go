@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-
+	common "github.com/apiheat/akamai-cli-common"
 	"github.com/urfave/cli"
 )
 
@@ -15,11 +13,10 @@ func listMaps(c *cli.Context) error {
 	data := fetchData(URL, "GET")
 
 	result, err := MapsAPIRespParse(data)
-	errorCheck(err)
+	common.ErrorCheck(err)
 
 	if c.Bool("raw") {
-		jsonRes, _ := json.MarshalIndent(result.SiteShieldMaps, "", "  ")
-		fmt.Printf("%+v\n", string(jsonRes))
+		common.OutputJSON(result.SiteShieldMaps)
 	} else {
 		printIDs(result.SiteShieldMaps)
 	}

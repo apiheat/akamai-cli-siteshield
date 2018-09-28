@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	common "github.com/apiheat/akamai-cli-common"
 	"github.com/urfave/cli"
 )
 
@@ -25,13 +26,13 @@ type Message struct {
 }
 
 func statusMap(c *cli.Context) error {
-	id := setID(c)
+	id := common.SetIntID(c, "Please provide Map ID")
 
 	urlStr := fmt.Sprintf("%s/%s", URL, id)
 	data := fetchData(urlStr, "GET")
 
 	result, err := MapAPIRespParse(data)
-	errorCheck(err)
+	common.ErrorCheck(err)
 
 	if result.Acknowledged {
 		return nil
@@ -49,14 +50,13 @@ func statusMap(c *cli.Context) error {
 	}
 
 	jsonMsg, err := json.MarshalIndent(errMessage, "", "  ")
-	errorCheck(err)
+	common.ErrorCheck(err)
 
-	//fmt.Println(string(jsonMsg))
 	return cli.NewExitError(string(jsonMsg), 2)
 }
 
 func ackMap(c *cli.Context) error {
-	id := setID(c)
+	id := common.SetIntID(c, "Please provide Map ID")
 
 	// Here we need to add check if we need to ack
 
@@ -64,7 +64,7 @@ func ackMap(c *cli.Context) error {
 	data := fetchData(urlStr, "POST")
 
 	result, err := MapAPIRespParse(data)
-	errorCheck(err)
+	common.ErrorCheck(err)
 
 	var arr []Map
 	arr = append(arr, result)

@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	common "github.com/apiheat/akamai-cli-common"
 	"github.com/urfave/cli"
 )
 
@@ -14,13 +15,13 @@ func cmdlistMap(c *cli.Context) error {
 }
 
 func listMap(c *cli.Context) error {
-	id := setID(c)
+	id := common.SetIntID(c, "Please provide Map ID")
 
 	urlStr := fmt.Sprintf("%s/%s", URL, id)
 	data := fetchData(urlStr, "GET")
 
 	result, err := MapAPIRespParse(data)
-	errorCheck(err)
+	common.ErrorCheck(err)
 
 	sorted := result.CurrentCidrs
 	sort.Strings(sorted)
@@ -41,9 +42,9 @@ func listMap(c *cli.Context) error {
 		}
 	case "raw":
 		if c.Bool("only-addresses") {
-			printJSON(sorted)
+			common.OutputJSON(sorted)
 		} else {
-			printJSON(result)
+			common.OutputJSON(result)
 		}
 	}
 
