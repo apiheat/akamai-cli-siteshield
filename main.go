@@ -4,23 +4,22 @@ import (
 	"os"
 	"sort"
 
-	"github.com/akamai/AkamaiOPEN-edgegrid-golang/edgegrid"
-	"github.com/fatih/color"
-	homedir "github.com/mitchellh/go-homedir"
+	common "github.com/apiheat/akamai-cli-common"
+	edgegrid "github.com/apiheat/go-edgegrid"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/urfave/cli"
 )
 
 var (
-	id                                  int
-	ips, colorOn, showConfigLocation    bool
-	reqString, output, version, appName string
-	configSection, configFile           string
-	edgeConfig                          edgegrid.Config
+	id              int
+	ips             bool
+	apiClient       *edgegrid.Client
+	appName, appVer string
 )
 
 // Constants
 const (
-	URL     = "/siteshield/v1/maps"
 	padding = 3
 )
 
@@ -49,57 +48,8 @@ type Map struct {
 }
 
 func main() {
-	_, inCLI := os.LookupEnv("AKAMAI_CLI")
-
-	appName = "akamai-siteshield"
-	if inCLI {
-		appName = "akamai siteshield"
-	}
-
-	app := cli.NewApp()
-	app.Name = appName
-	app.HelpName = appName
-	app.Usage = "A CLI to interact with Akamai SiteShield"
-	app.Version = version
-	app.Copyright = ""
-	app.Authors = []cli.Author{
-		{
-			Name: "Petr Artamonov",
-		},
-		{
-			Name: "Rafal Pieniazek",
-		},
-	}
-
-	dir, _ := homedir.Dir()
-	dir += string(os.PathSeparator) + ".edgerc"
-
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:        "section, s",
-			Value:       "default",
-			Usage:       "`NAME` of section to use from credentials file",
-			Destination: &configSection,
-			EnvVar:      "AKAMAI_EDGERC_SECTION",
-		},
-		cli.StringFlag{
-			Name:        "config, c",
-			Value:       dir,
-			Usage:       "Location of the credentials `FILE`",
-			Destination: &configFile,
-			EnvVar:      "AKAMAI_EDGERC",
-		},
-		cli.BoolFlag{
-			Name:        "no-color",
-			Usage:       "Disable color output",
-			Destination: &colorOn,
-		},
-		cli.BoolFlag{
-			Name:        "show-configuration-file-location",
-			Usage:       "Disable display of location and section for config file",
-			Destination: &showConfigLocation,
-		},
-	}
+	app := common.CreateNewApp(appName, "A CLI to interact with Akamai SiteShield", appVer)
+	app.Flags = common.CreateFlags()
 
 	app.Commands = []cli.Command{
 		{
@@ -111,9 +61,10 @@ func main() {
 					Name:  "maps",
 					Usage: "List SiteShield Maps",
 					Flags: []cli.Flag{
-						cli.BoolFlag{
-							Name:  "raw",
-							Usage: "Show raw data of SiteShield Maps",
+						cli.StringFlag{
+							Name:  "output",
+							Value: "json",
+							Usage: "Output format. Supported ['json' and 'table']",
 						},
 					},
 					Action: cmdlistMaps,
@@ -123,10 +74,9 @@ func main() {
 					Usage: "List SiteShield Map by `ID`",
 					Flags: []cli.Flag{
 						cli.StringFlag{
-							Name:        "output",
-							Value:       "raw",
-							Usage:       "Output format. Supported ['json==raw' and 'apache']",
-							Destination: &output,
+							Name:  "output",
+							Value: "json",
+							Usage: "Output format. Supported ['json' and 'apache']",
 						},
 						cli.BoolFlag{
 							Name:  "only-addresses",
@@ -167,14 +117,19 @@ func main() {
 	sort.Sort(cli.CommandsByName(app.Commands))
 
 	app.Before = func(c *cli.Context) error {
-		if c.Bool("no-color") {
-			color.NoColor = true
-		}
+		var err error
 
-		config(configFile, configSection, showConfigLocation)
+		apiClient, err = common.EdgeClientInit(c.GlobalString("config"), c.GlobalString("section"), c.GlobalString("debug"))
+
+		if err != nil {
+			return cli.NewExitError(err, 1)
+		}
 
 		return nil
 	}
 
-	app.Run(os.Args)
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

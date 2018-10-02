@@ -17,20 +17,17 @@ func cmdlistMap(c *cli.Context) error {
 func listMap(c *cli.Context) error {
 	id := common.SetIntID(c, "Please provide Map ID")
 
-	urlStr := fmt.Sprintf("%s/%s", URL, id)
-	data := fetchData(urlStr, "GET")
-
-	result, err := MapAPIRespParse(data)
+	data, response, err := apiClient.SiteShield.ListMap(id)
 	common.ErrorCheck(err)
 
-	sorted := result.CurrentCidrs
+	sorted := data.CurrentCidrs
 	sort.Strings(sorted)
 
-	if !isOutputFormatSupported(output) {
-		log.Fatalf("Output you provided `%s` is not supported. We support 'raw' and 'apache'\n", output)
+	if !isOutputFormatSupported(c.String("output")) {
+		log.Fatalf("Output you provided `%s` is not supported. We support 'json' and 'apache'\n", c.String("output"))
 	}
 
-	switch output {
+	switch c.String("output") {
 	case "apache":
 		if c.Bool("only-addresses") {
 			join := strings.Join(sorted[:], " ")
@@ -40,13 +37,23 @@ func listMap(c *cli.Context) error {
 			log.Println("'Apache' output format can be used only to show addresses")
 			log.Printf("Please run '%s list map --only-addresses --output apache %s'\n", appName, id)
 		}
-	case "raw":
+	case "json":
 		if c.Bool("only-addresses") {
 			common.OutputJSON(sorted)
 		} else {
-			common.OutputJSON(result)
+			common.PrintJSON(response.Body)
 		}
 	}
 
 	return nil
+}
+
+func isOutputFormatSupported(output string) bool {
+	list := []string{"json", "apache"}
+	for _, b := range list {
+		if b == output {
+			return true
+		}
+	}
+	return false
 }

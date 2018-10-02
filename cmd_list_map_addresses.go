@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"sort"
 	"text/tabwriter"
 
 	common "github.com/apiheat/akamai-cli-common"
 	"github.com/fatih/color"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -19,16 +19,13 @@ func cmdAddresses(c *cli.Context) error {
 func addresses(c *cli.Context) error {
 	id := common.SetIntID(c, "Please provide Map ID")
 
-	urlStr := fmt.Sprintf("%s/%s", URL, id)
-	data := fetchData(urlStr, "GET")
-
-	result, err := MapAPIRespParse(data)
+	data, _, err := apiClient.SiteShield.ListMap(id)
 	common.ErrorCheck(err)
 
-	current := result.CurrentCidrs
+	current := data.CurrentCidrs
 	sort.Strings(current)
 
-	proposed := result.ProposedCidrs
+	proposed := data.ProposedCidrs
 	sort.Strings(proposed)
 
 	if c.Bool("show-changes") {

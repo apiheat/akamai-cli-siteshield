@@ -47,11 +47,12 @@ AUTHORS:
 COMMANDS:
      acknowledge, ack  Acknowledge SiteShield Map by `ID`
      list, ls          List SiteShield objects
+     status            Check Status: if Acknowledge for SiteShield Map by `ID` is required. If required process will exit with exit code 2
      help, h           Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --config FILE, -c FILE   Location of the credentials FILE (default: "/Users/partamonov/.edgerc") [$AKAMAI_EDGERC]
-   --no-color               Disable color output
+   --config FILE, -c FILE   Location of the credentials FILE (default: "/Users/partamonov/.edgerc") [$AKAMAI_EDGERC_CONFIG]
+   --debug value            Debug Level [$AKAMAI_EDGERC_DEBUGLEVEL]
    --section NAME, -s NAME  NAME of section to use from credentials file (default: "default") [$AKAMAI_EDGERC_SECTION]
    --help, -h               show help
    --version, -v            print the version

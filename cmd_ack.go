@@ -6,6 +6,9 @@ import (
 	"time"
 
 	common "github.com/apiheat/akamai-cli-common"
+	edgegrid "github.com/apiheat/go-edgegrid"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/urfave/cli"
 )
 
@@ -28,25 +31,23 @@ type Message struct {
 func statusMap(c *cli.Context) error {
 	id := common.SetIntID(c, "Please provide Map ID")
 
-	urlStr := fmt.Sprintf("%s/%s", URL, id)
-	data := fetchData(urlStr, "GET")
-
-	result, err := MapAPIRespParse(data)
+	ack, _, err := apiClient.SiteShield.ListMap(id)
 	common.ErrorCheck(err)
 
-	if result.Acknowledged {
+	if ack.Acknowledged {
+		log.Info("SiteShield Map '" + id + "' is up to date")
 		return nil
 	}
 
-	ackReqBy := fmt.Sprintf("%v", time.Unix(0, result.AcknowledgeRequiredBy*int64(time.Millisecond)))
+	ackReqBy := fmt.Sprintf("%v", time.Unix(0, ack.AcknowledgeRequiredBy*int64(time.Millisecond)))
 	msg := fmt.Sprintf("SiteShield map should be acknowledged till %s", ackReqBy)
 
 	errMessage := &Message{
 		ID:                         id,
 		Message:                    msg,
-		Acknowledged:               result.Acknowledged,
+		Acknowledged:               ack.Acknowledged,
 		AcknowledgeRequiredBy:      ackReqBy,
-		AcknowledgeRequiredByEpoch: result.AcknowledgeRequiredBy,
+		AcknowledgeRequiredByEpoch: ack.AcknowledgeRequiredBy,
 	}
 
 	jsonMsg, err := json.MarshalIndent(errMessage, "", "  ")
@@ -59,15 +60,19 @@ func ackMap(c *cli.Context) error {
 	id := common.SetIntID(c, "Please provide Map ID")
 
 	// Here we need to add check if we need to ack
-
-	urlStr := fmt.Sprintf("%s/%s/acknowledge", URL, id)
-	data := fetchData(urlStr, "POST")
-
-	result, err := MapAPIRespParse(data)
+	ack, _, err := apiClient.SiteShield.ListMap(id)
 	common.ErrorCheck(err)
 
-	var arr []Map
-	arr = append(arr, result)
+	if ack.Acknowledged {
+		log.Info("SiteShield Map '" + id + "' is up to date")
+		return nil
+	}
+
+	data, _, err := apiClient.SiteShield.AckMap(id)
+	common.ErrorCheck(err)
+
+	var arr []edgegrid.AkamaiSiteShieldMap
+	arr = append(arr, *data)
 	printIDs(arr)
 
 	return nil
