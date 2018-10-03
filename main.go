@@ -23,30 +23,6 @@ const (
 	padding = 3
 )
 
-// MapsAPIResp response struct
-type MapsAPIResp struct {
-	SiteShieldMaps []Map `json:"siteShieldMaps"`
-}
-
-// Map struct
-type Map struct {
-	AcknowledgeRequiredBy int64    `json:"acknowledgeRequiredBy"`
-	Acknowledged          bool     `json:"acknowledged"`
-	AcknowledgedBy        string   `json:"acknowledgedBy"`
-	AcknowledgedOn        int64    `json:"acknowledgedOn"`
-	Contacts              []string `json:"contacts"`
-	CurrentCidrs          []string `json:"currentCidrs"`
-	ID                    int      `json:"id"`
-	LatestTicketID        int      `json:"latestTicketId"`
-	MapAlias              string   `json:"mapAlias"`
-	McmMapRuleID          int      `json:"mcmMapRuleId"`
-	ProposedCidrs         []string `json:"proposedCidrs"`
-	RuleName              string   `json:"ruleName"`
-	Service               string   `json:"service"`
-	Shared                bool     `json:"shared"`
-	Type                  string   `json:"type"`
-}
-
 func main() {
 	app := common.CreateNewApp(appName, "A CLI to interact with Akamai SiteShield", appVer)
 	app.Flags = common.CreateFlags()
