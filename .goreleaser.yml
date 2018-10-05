@@ -2,8 +2,8 @@
 # Build customization
 builds:
   -
-    binary: akamai-siteshield
-    ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+    binary: "{{ .ProjectName }}"
+    ldflags: -s -w -X main.appName={{ .ProjectName }} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.appVer={{.Tag}}
     goos:
       - windows
       - darwin
@@ -18,11 +18,10 @@ archive:
 checksum:
   name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
 release:
-  draft: true
-  prerelease: false
-  name_template: "{{.ProjectName}}-v{{.Version}}"
+  name_template: "{{.ProjectName}} v{{.Version}}"
 changelog:
   filters:
     exclude:
-      - '^typo'
-      - 'version bump'
+      - '[b|B]ump.*\sversion'
+      - '.*typo.*'
+      - '[V|v]ersion.*\sbump'
