@@ -45,7 +45,7 @@ The tool can be used as a stand-alone binary or in conjuction with [Akamai CLI](
 Execute the following from console
 
 ```shell
-> akamai install https://github.com/apiheat/akamai-cli-reporting
+> akamai install https://github.com/apiheat/akamai-cli-siteshield
 ```
 
 #### Stand-alone
