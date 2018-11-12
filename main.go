@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"sort"
 
@@ -98,7 +99,8 @@ func main() {
 		apiClient, err = common.EdgeClientInit(c.GlobalString("config"), c.GlobalString("section"), c.GlobalString("debug"))
 
 		if err != nil {
-			return cli.NewExitError(err, 1)
+			fmt.Println(err)
+			os.Exit(1)
 		}
 
 		return nil
