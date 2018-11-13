@@ -9,17 +9,22 @@ usage()
 
 
 version=
-while getopts v:h: option
+comment=
+while getopts v:c:h: option
 do
   case "${option}"
   in
   v) version=${OPTARG};;
+  c) comment=${OPTARG};;
   h) usage;;
   esac
 done
+
 # while [ "$1" != "" ]; do
 #     case $1 in
 #         -v | --version )        version=$1
+#                                 ;;
+#         -c | --comment )        version=$1
 #                                 ;;
 #         -h | --help )           usage
 #                                 exit
@@ -34,6 +39,10 @@ if [ "$version" == "" ]; then
   echo "Please specify version/tag to release in format X.X.X"
   exit 1
 else
+  if [ "$comment" == "" ]; then
+    comment="Release v$version"
+  fi
+
   cli_version=`cat cli.json | jq ".commands[0].version" | tr -d '"'`
   echo "Current CLI version: ${cli_version}"
   echo "Proposed version: ${version}"
@@ -47,17 +56,14 @@ else
     git add cli.json
     echo "git commit -m 'Updated version in cli.json'"
     git commit -m 'Updated version in cli.json'
-    echo "git push origin master"
-    git push origin master
   fi
-
-  # Add tag
-  echo "git tag -a v${version} -m \"Release v$version\""
-  git tag -a v${version} -m "Release v$version"
-  # Push
-  echo "git push origin v${version}"
-  git push origin v${version}
-  # Create release
-  echo "goreleaser --rm-dist"
-  goreleaser --rm-dist
+    echo "dep ensure -update"
+    dep ensure -update
+    dep status
+    echo "git add -A && git commit -a -m '$comment'"
+    git add -A && git commit -a -m "$comment"
+    echo "git tag -a v$version -m '$comment'"
+    git tag -a v$version -m "$comment"
+    echo "git push origin master --tags"
+    git push origin master --tags
 fi
