@@ -107,11 +107,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e2e51bf73862610e548f3acd292f447b500e53d792aa55260a8cb605dfd8ba09"
+  digest = "1:3e01c69b34e7c3fa4b7a118ca95a6beaecea00f7f4fb701545d83eacd3badb3c"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "0ad05ae3009d6413d3363aa09b350b2ec37daf09"
+  revision = "b44545bcd369ef9ff9bebcfebf5f3370ef9b1932"
 
 [solve-meta]
   analyzer-name = "dep"
