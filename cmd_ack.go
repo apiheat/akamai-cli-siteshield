@@ -71,7 +71,7 @@ func ackMap(c *cli.Context) error {
 	data, _, err := apiClient.SiteShield.AckMap(id)
 	common.ErrorCheck(err)
 
-	var arr []edgegrid.AkamaiSiteShieldMap
+	var arr []edgegrid.SiteShieldMap
 	arr = append(arr, *data)
 	printIDs(arr)
 

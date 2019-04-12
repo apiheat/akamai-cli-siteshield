@@ -30,7 +30,7 @@ func listMaps(c *cli.Context) error {
 	return nil
 }
 
-func printIDs(data []edgegrid.AkamaiSiteShieldMap) {
+func printIDs(data []edgegrid.SiteShieldMap) {
 	fmt.Println("SiteShield Maps:")
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', 0)
 	fmt.Fprintln(w, fmt.Sprint("ID\tName\tAlias\tEnv\tAcknowledged\tAcknowledge Required By"))

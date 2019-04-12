@@ -25,3 +25,4 @@ changelog:
       - '[b|B]ump.*\sversion'
       - '.*typo.*'
       - '[V|v]ersion.*\sbump'
+      - 'Updated version in cli.json'
